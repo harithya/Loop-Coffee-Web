@@ -1,5 +1,6 @@
 import { ShoppingBagIcon, TruckIcon } from "@heroicons/react/24/outline";
 import React from "react";
+import { useReactToPrint } from "react-print";
 
 const ShippingMethod = () => {
   return (
@@ -18,12 +19,12 @@ const ShippingMethod = () => {
                 </p>
               </div>
             </div>
-            <label
-              htmlFor="modal-shipping"
+            <button
+              // htmlFor="modal-shipping"
               className="btn btn-sm btn-outline btn-primary"
             >
               Ubah
-            </label>
+            </button>
           </div>
         </div>
       </div>
