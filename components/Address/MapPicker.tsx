@@ -37,11 +37,11 @@ const MapPicker = () => {
   // get address from lat lng
   useEffect(() => {
     if (location.lat === 0 && location.lng === 0) return;
-    const URL = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.lat},${location.lng}&key=${MAP_KEY}`;
+    const URL = `https://geocode.maps.co/reverse?lat=${location.lat}&lon=${location.lng}`;
     const fetchAddress = async () => {
       setIsLoading(true);
       await axios.get(URL).then((res) => {
-        // setAddress(res.data.results[0].formatted_address);
+        setAddress(res.data.display_name);
       });
       setIsLoading(false);
     };
