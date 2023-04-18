@@ -1,8 +1,16 @@
 import { MAP_KEY } from "@/config/env";
-import { useJsApiLoader, GoogleMap, Marker } from "@react-google-maps/api";
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import MyLocationButton from "./MyLocationButton";
 import axios from "axios";
+import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
+import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.webpack.css"; // Re-uses images from
+import "leaflet-defaulticon-compatibility";
+
+const ChangeView = ({ center, zoom }: any) => {
+  const map = useMap();
+  map.setView(center, zoom);
+  return null;
+};
 
 const MapPicker = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -12,12 +20,7 @@ const MapPicker = () => {
   });
   const [address, setAddress] = useState("");
 
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: MAP_KEY,
-    region: "ID",
-    language: "id",
-  });
-
+  // get current location
   const getMyLocation = () => {
     navigator.geolocation.getCurrentPosition((position) => {
       setLocation({
@@ -31,45 +34,56 @@ const MapPicker = () => {
     getMyLocation();
   }, []);
 
+  // get address from lat lng
   useEffect(() => {
     if (location.lat === 0 && location.lng === 0) return;
     const URL = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.lat},${location.lng}&key=${MAP_KEY}`;
     const fetchAddress = async () => {
       setIsLoading(true);
       await axios.get(URL).then((res) => {
-        setAddress(res.data.results[0].formatted_address);
+        // setAddress(res.data.results[0].formatted_address);
       });
       setIsLoading(false);
     };
     fetchAddress();
   }, [location]);
 
-  const onChangeMarker = (e: google.maps.MapMouseEvent) => {
-    const { lat, lng }: any = e.latLng?.toJSON();
-    setLocation({
-      lat,
-      lng,
-    });
-  };
+  const markerRef = useRef<any>(null);
+  // marker change position
+  const eventHandlers = useMemo(
+    () => ({
+      dragend() {
+        const marker = markerRef.current;
+        if (marker != null) {
+          setLocation({
+            lat: marker.getLatLng().lat,
+            lng: marker.getLatLng().lng,
+          });
+        }
+      },
+    }),
+    []
+  );
 
   return (
     <div className="flex h-screen flex-col">
-      {isLoaded ? (
+      {true ? (
         <div className="flex-1 relative">
-          <GoogleMap
-            zoom={18}
-            clickableIcons={false}
-            center={location}
-            mapContainerClassName="h-full w-full"
-            options={{
-              fullscreenControl: false,
-              mapTypeControl: false,
-              zoomControl: false,
-              streetViewControl: false,
-            }}
-          >
-            <Marker position={location} draggable onDragEnd={onChangeMarker} />
-          </GoogleMap>
+          <MapContainer className="h-full w-full">
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <Marker
+              ref={markerRef}
+              eventHandlers={eventHandlers}
+              position={[location.lat, location.lng]}
+              draggable
+            />
+            {location.lat !== 0 && location.lng !== 0 && (
+              <ChangeView center={[location.lat, location.lng]} zoom={20} />
+            )}
+          </MapContainer>
           <MyLocationButton onClick={getMyLocation} />
         </div>
       ) : (

@@ -1,7 +1,11 @@
 import DetailLayout from "@/components/Layout/DetailLayout";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import React, { ReactElement, useLayoutEffect } from "react";
-import MapPicker from "@/components/Address/MapPicker";
+
+const MapPicker = dynamic(() => import("@/components/Address/MapPicker"), {
+  ssr: false,
+});
 
 const Address = () => {
   const router = useRouter();
